@@ -12,3 +12,6 @@ class Board:
                 ["W", "_", "W", "_", "W", "_", "W", "_"],
                 ["_", "W", "_", "W", "_", "W", "_", "W"]
             ]
+
+    def __getitem__(self, position : tuple[int, int]) -> str:
+        return self.board[position[0]][position[1]]

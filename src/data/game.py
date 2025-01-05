@@ -1,28 +1,42 @@
-from board import Board
-from player import Player
+from src.data.board import Board
+from src.data.player import Player
 
 
-class Game:
+class Game():
+    WHITE = 'W'
+    BLACK = 'B'
+    EMPTY = '_'
 
-    def __init__(self, board: Board, current_turn: Player):
-        self.board = board
-        self.current_turn = current_turn
-        self.winner = None
-        self.game_over = False
+    def __init__(self, default_white_pieces: int = 12, default_black_pieces: int = 12):
+        self.board = Board()
+        self.white_pieces = default_white_pieces
+        self.black_pieces = default_black_pieces
 
-    def play(self):
-        while not self.game_over:
-            self.current_turn.move(self.board)
-            self.check_winner()
-            self.current_turn = self.switch_turn()
+        self.players = [Player('W', default_white_pieces), Player('B', default_black_pieces)]
+        self.current_turn: Player | None = self.players[0]
 
-    def check_winner(self):
-        if self.current_turn.pieces == 0:
-            self.winner = self.switch_turn()
-            self.game_over = True
+    def switch_turn(self):
+        pass
 
-    def switch_turn(self) -> Player:
-        if self.current_turn.color == "B":
-            return Player("W")
+    def is_game_over(self):
+        return any(player.pieces == 0 for player in self.players)
 
-        return Player("B")
+    def make_move(self, player, piece, new_position):
+        if player.color != self.current_turn:
+            raise ValueError("It's not your turn")
+
+        if piece.move(self.board, new_position):
+            self.switch_turn()
+        elif piece.capture(self.board, new_position):
+            self.switch_turn()
+            player.pieces -= 1
+
+        else:
+            raise ValueError("Invalid move")
+
+    def get_winner(self):
+        if self.is_game_over():
+            for player in self.players:
+                if player.pieces > 0:
+                    return player.color
+        return None

@@ -2,40 +2,46 @@ from src.data.piece import Piece
 
 class King(Piece):
 
-    def __init__(self, color: str, position: tuple[int, int]):
-        super().__init__(color)
-        self.position = position
 
-    def move(self, board, new_position):
-        if self.is_valid_move(board, new_position):
+    def move(self, board, new_position: list[int]) -> bool:
+        row_diff = abs(new_position[0] - self.position[0])
+        col_diff = abs(new_position[1] - self.position[1])
+
+        if row_diff == col_diff and board[new_position] == "_":
             self.position = new_position
+            return True
+        return False
 
-    def capture(self, board, new_position):
-        if self.is_valid_capture(board, new_position):
-            self.position = new_position
-            # Remove the captured piece from the board
-            captured_position = ((self.position[0] + new_position[0]) // 2,
-                                 (self.position[1] + new_position[1]) // 2)
-            board[captured_position[0]][captured_position[1]] = "_"
+    def capture(self, board, new_position: tuple[int, int]) -> bool:
+        row_diff = abs(new_position[0] - self.position[0])
+        col_diff = abs(new_position[1] - self.position[1])
 
-    def is_valid_move(self, board, new_position):
+        if row_diff == 2 and col_diff == 2:
+            captured_position = ((self.position[0] + new_position[0]) // 2, (self.position[1] + new_position[1]) // 2)
+            captured_piece = board[captured_position]
 
-        if new_position[0] < 0 or new_position[0] > 7 or new_position[1] < 0 or new_position[1] >= 7:
-            return False
+            if captured_piece != "_" and captured_piece.color != self.color:
+                self.position = new_position
+                board[captured_position] = "_"
+                return True
+        return False
 
-        row_diff = new_position[0] - self.position[0]
-        col_diff = new_position[1] - self.position[1]
+    def can_move(self, board) -> bool:
+        directions = [(1, 1), (1, -1), (-1, 1), (-1, -1)]
+        for direction in directions:
+            new_position = (self.position[0] + direction[0], self.position[1] + direction[1])
+            if 0 <= new_position[0] < 8 and 0 <= new_position[1] < 8 and board[new_position] == "_":
+                return True
+        return False
 
-        return abs(row_diff) == 1 and abs(col_diff) == 1
 
-    def is_valid_capture(self, board, new_position):
-        row_diff = new_position[0] - self.position[0]
-        col_diff = new_position[1] - self.position[1]
-
-        if abs(row_diff) == 2 and abs(col_diff) == 2:
-            captured_position = ((self.position[0] + new_position[0]) // 2,
-                                 (self.position[1] + new_position[1]) // 2)
-            captured_piece = board[captured_position[0]][captured_position[1]]
-            return captured_piece is not None and captured_piece.color != self.color
-
+    def can_capture(self, board) -> bool:
+        directions = [(2, 2), (2, -2), (-2, 2), (-2, -2)]
+        for direction in directions:
+            new_position = [self.position[0] + direction[0], self.position[1] + direction[1]]
+            captured_position = self.get_captured_position(new_position)
+            if 0 <= new_position[0] < 8 and 0 <= new_position[1] < 8:
+                captured_piece = board[captured_position]
+                if captured_piece != "_" and captured_piece.color != self.color:
+                    return True
         return False
